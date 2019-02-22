@@ -1,5 +1,7 @@
 package controller;
 
+import java.util.Arrays;
+
 public class Algorithm {
 	
 	public static String[] a;
@@ -84,18 +86,54 @@ public class Algorithm {
 		
 	}
 	
-	public static Complex[] findRoot(Integer n, Complex[] coefficient, Double b, Double m, Complex z) {
+	public static int partition(Complex[] min, Complex[] est, int low, int high) 
+    { 
+        Complex pivot = est[high];  
+        int i = (low-1); // index of smaller element 
+        for (int j=low; j<high; j++) 
+        { 
+            if (pivot.isGreater(est[j])) 
+            { 
+                i++; 
+                Complex temp_min = min[i]; 
+                min[i] = min[j]; 
+                min[j] = temp_min; 
+                Complex temp_est = est[i];
+                est[i] = est[j];
+                est[j] = temp_est;
+            } 
+        } 
+        Complex temp_min = min[i+1]; 
+        min[i+1] = min[high]; 
+        min[high] = temp_min; 
+        Complex temp_est = est[i+1];
+        est[i+1] = est[high];
+        est[high] = temp_est;
+        return i+1; 
+    } 
+
+	public static void sort(Complex[] min, Complex[] est, int low, int high) { 
+        if (low < high) { 
+            int pi = partition(min, est, low, high); 
+            sort(min, est, low, pi-1); 
+            sort(min, est, pi+1, high); 
+        } 
+    } 
+	
+	public static Complex[] findRoot(Integer n, Complex[] coefficient, Double b, Double m, Complex z, Integer k) {
 		
 		Complex c = new Complex(0.00, 0.00);
-		Complex[] min = new Complex[n];
 		Complex estimate = new Complex(0.00, 0.00);
-		Complex[] minEstimate = new Complex[n];
 		Complex minimum = new Complex(0.00, 0.00);
 		Complex minimumEstimate = new Complex(0.00, 0.00);
 		Complex[] roots = new Complex[n];
 		Integer grid = 8 * n * n;
-		int k = 0;
+		Complex[] minInit = new Complex[grid * grid];
+		Complex[] minEstimateInit = new Complex[grid * grid];
+		int s = 0;
 		int h = 0;
+		int l = 0;
+		boolean ok = true;
 		Double bi = b;
 		Double gridSize = b / ((double) grid / 2);
 		for (int i = 0; i < n; i++) roots[i] = new Complex(0.00, 0.00);
@@ -103,43 +141,39 @@ public class Algorithm {
 			for (int y = 0; y < grid; y++) {
 				c = new Complex(z.re() - b + (gridSize / 2) + (x * gridSize), z.im() + b - (gridSize / 2) - (y * gridSize));
 				if(new Complex(c.re() - z.re(), c.im() - z.im()).abs() > b) continue;
-				k++;
 				estimate = new Complex(0.00, 0.00);
 				for (int j = 0; j <= n; j++) {
 					estimate = estimate.plus(coefficient[j].times(Complex.power(c, n - j)));
 				}
-				if(k == 1)  {
-					min[0] = c;
-					minEstimate[0] = estimate;
-				}
-				if(minEstimate[0].isGreater(estimate)) {
-					for (int p = h; p >= 0; p--) {
-						if(p < n - 1) {
-							min[p+1] = min[p];
-							minEstimate[p+1] = minEstimate[p];
-						}
-					}
-					min[0] = c;
-					minEstimate[0] = estimate;
-					h++;
-				}
+				minInit[h] = c;
+				minEstimateInit[h++] = estimate;
 			}
 		}
-		for (h = 0; h < n; h++) {
+		Complex[] min = new Complex[h];
+		Complex[] minEstimate = new Complex[h];
+		for (l = 0; l < h; l++) {
+			min[l] = minInit[l];
+			minEstimate[l] = minEstimateInit[l];
+		}
+		sort(min, minEstimate, 0, h - 1);
+		h = 0;
+		l = 0;
+		while (h < n) {
 			b = bi / 2;
-			z = min[h];
+			z = min[l];
+			ok = true;
 			for (int i = 1; i <= m; i++) {
-				k = 0;
+				s = 0;
 				for (int x = 0; x < grid; x++) {
 					for (int y = 0; y < grid; y++) {
 						c = new Complex(z.re() - b + (gridSize / 2) + (x * gridSize), z.im() + b - (gridSize / 2) - (y * gridSize));
 						if(new Complex(c.re() - z.re(), c.im() - z.im()).abs() > b) continue;
-						k++;
+						s++;
 						estimate = new Complex(0.00, 0.00);
 						for (int j = 0; j <= n; j++) {
 							estimate = estimate.plus(coefficient[j].times(Complex.power(c, n - j)));
 						}
-						if(k==1)  {
+						if(s == 1)  {
 							minimum = c;
 							minimumEstimate = estimate;
 						}
@@ -153,7 +187,14 @@ public class Algorithm {
 				z = minimum;
 			}
 			//if(minimumEstimate.isGreater(minEstimate[h])) break;
-			roots[h] = minimum;
+			for(int w = 0; w < h; w++) if((roots[w].minus(minimum)).abs() < Math.pow(2, -k)) {
+				l++;
+				ok = false;
+			}
+			if(ok == true) {
+				l++;
+				roots[h++] = minimum;
+			}
 		}
 		
 		return roots;
@@ -173,7 +214,7 @@ public class Algorithm {
 		
 		Complex z = new Complex(0.00, 0.00);
 		
-		Complex[] c = findRoot(n, coefficient, b, m, z);
+		Complex[] c = findRoot(n, coefficient, b, m, z, k);
 		
 		return c;
 		
