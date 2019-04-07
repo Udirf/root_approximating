@@ -9,7 +9,7 @@ public class MainGui {
 	public static void createFrame() {
 
 		myFrame = new JFrame("Root approximating"); // create application window
-		myFrame.setBounds(100, 100, 900, 600); 
+		myFrame.setBounds(20, 20, 1320, 700); 
 		myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
 		myFrame.getContentPane().setLayout(null); 
 

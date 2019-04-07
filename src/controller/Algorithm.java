@@ -1,7 +1,5 @@
 package controller;
 
-import java.util.Arrays;
-
 public class Algorithm {
 	
 	public static String[] a;
@@ -118,15 +116,16 @@ public class Algorithm {
             sort(min, est, low, pi-1); 
             sort(min, est, pi+1, high); 
         } 
-    } 
+	} 
 	
-	public static Complex[] findRoot(Integer n, Complex[] coefficient, Double b, Double m, Complex z, Integer k) {
+	public static Solution[] findOneRoot(Integer n, Complex[] coefficient, Double b, Double m, Complex z, Integer k) {
 		
 		Complex c = new Complex(0.00, 0.00);
 		Complex estimate = new Complex(0.00, 0.00);
 		Complex minimum = new Complex(0.00, 0.00);
 		Complex minimumEstimate = new Complex(0.00, 0.00);
-		Complex[] roots = new Complex[n];
+		Complex[] roots = new Complex[1];
+		Solution[] solutions = new Solution[1];
 		Integer grid = 8 * n * n;
 		Complex[] minInit = new Complex[grid * grid];
 		Complex[] minEstimateInit = new Complex[grid * grid];
@@ -134,9 +133,10 @@ public class Algorithm {
 		int h = 0;
 		int l = 0;
 		boolean ok = true;
+		int m_circles = (int) (Math.floor(m) + 1);
 		Double bi = b;
 		Double gridSize = b / ((double) grid / 2);
-		for (int i = 0; i < n; i++) roots[i] = new Complex(0.00, 0.00);
+		roots[0] = new Complex(0.00, 0.00);
 		for (int x = 0; x < grid; x++) {
 			for (int y = 0; y < grid; y++) {
 				c = new Complex(z.re() - b + (gridSize / 2) + (x * gridSize), z.im() + b - (gridSize / 2) - (y * gridSize));
@@ -151,19 +151,27 @@ public class Algorithm {
 		}
 		Complex[] min = new Complex[h];
 		Complex[] minEstimate = new Complex[h];
+		Complex[][] circleCenters = new Complex[h][];
+		Double[][] circleRadius = new Double[h][];
 		for (l = 0; l < h; l++) {
 			min[l] = minInit[l];
 			minEstimate[l] = minEstimateInit[l];
+			circleCenters[l] = new Complex[m_circles];
+			circleRadius[l] = new Double[m_circles];
+			circleCenters[l][0] = new Complex(0.00, 0.00);
+			circleRadius[l][0] = b;
 		}
 		sort(min, minEstimate, 0, h - 1);
 		h = 0;
 		l = 0;
-		while (h < n) {
+		while (h < 1) {
 			b = bi / 2;
 			z = min[l];
 			ok = true;
 			for (int i = 1; i <= m; i++) {
 				s = 0;
+				circleCenters[h][i] = z;
+				circleRadius[h][i] = b;
 				for (int x = 0; x < grid; x++) {
 					for (int y = 0; y < grid; y++) {
 						c = new Complex(z.re() - b + (gridSize / 2) + (x * gridSize), z.im() + b - (gridSize / 2) - (y * gridSize));
@@ -193,15 +201,108 @@ public class Algorithm {
 			}
 			if(ok == true) {
 				l++;
+				solutions[h] = new Solution(minimum, m_circles, circleCenters[h], circleRadius[h]);
 				roots[h++] = minimum;
 			}
 		}
 		
-		return roots;
+		return solutions;
 		
 	}
 	
-	public static Complex[] init(String poly, Integer n, Integer k) { // initializing variables for the main algorithm
+	public static Solution[] findRoot(Integer n, Complex[] coefficient, Double b, Double m, Complex z, Integer k) {
+		
+		Complex c = new Complex(0.00, 0.00);
+		Complex estimate = new Complex(0.00, 0.00);
+		Complex minimum = new Complex(0.00, 0.00);
+		Complex minimumEstimate = new Complex(0.00, 0.00);
+		Complex[] roots = new Complex[n];
+		Solution[] solutions = new Solution[n];
+		Integer grid = 8 * n * n;
+		Complex[] minInit = new Complex[grid * grid];
+		Complex[] minEstimateInit = new Complex[grid * grid];
+		int s = 0;
+		int h = 0;
+		int l = 0;
+		boolean ok = true;
+		int m_circles = (int) (Math.floor(m) + 1);
+		Double bi = b;
+		Double gridSize = b / ((double) grid / 2);
+		for (int i = 0; i < n; i++) roots[i] = new Complex(0.00, 0.00);
+		for (int x = 0; x < grid; x++) {
+			for (int y = 0; y < grid; y++) {
+				c = new Complex(z.re() - b + (gridSize / 2) + (x * gridSize), z.im() + b - (gridSize / 2) - (y * gridSize));
+				if(new Complex(c.re() - z.re(), c.im() - z.im()).abs() > b) continue;
+				estimate = new Complex(0.00, 0.00);
+				for (int j = 0; j <= n; j++) {
+					estimate = estimate.plus(coefficient[j].times(Complex.power(c, n - j)));
+				}
+				minInit[h] = c;
+				minEstimateInit[h++] = estimate;
+			}
+		}
+		Complex[] min = new Complex[h];
+		Complex[] minEstimate = new Complex[h];
+		Complex[][] circleCenters = new Complex[h][];
+		Double[][] circleRadius = new Double[h][];
+		for (l = 0; l < h; l++) {
+			min[l] = minInit[l];
+			minEstimate[l] = minEstimateInit[l];
+			circleCenters[l] = new Complex[m_circles];
+			circleRadius[l] = new Double[m_circles];
+			circleCenters[l][0] = new Complex(0.00, 0.00);
+			circleRadius[l][0] = b;
+		}
+		sort(min, minEstimate, 0, h - 1);
+		h = 0;
+		l = 0;
+		while (h < n) {
+			b = bi / 2;
+			z = min[l];
+			ok = true;
+			for (int i = 1; i <= m; i++) {
+				s = 0;
+				circleCenters[h][i] = z;
+				circleRadius[h][i] = b;
+				for (int x = 0; x < grid; x++) {
+					for (int y = 0; y < grid; y++) {
+						c = new Complex(z.re() - b + (gridSize / 2) + (x * gridSize), z.im() + b - (gridSize / 2) - (y * gridSize));
+						if(new Complex(c.re() - z.re(), c.im() - z.im()).abs() > b) continue;
+						s++;
+						estimate = new Complex(0.00, 0.00);
+						for (int j = 0; j <= n; j++) {
+							estimate = estimate.plus(coefficient[j].times(Complex.power(c, n - j)));
+						}
+						if(s == 1)  {
+							minimum = c;
+							minimumEstimate = estimate;
+						}
+						if(minimumEstimate.isGreater(estimate)) {
+							minimum = c;
+							minimumEstimate = estimate;
+						}
+					}
+				}
+				b /= 2;
+				z = minimum;
+			}
+			//if(minimumEstimate.isGreater(minEstimate[h])) break;
+			for(int w = 0; w < h; w++) if((roots[w].minus(minimum)).abs() < Math.pow(2, -k)) {
+				l++;
+				ok = false;
+			}
+			if(ok == true) {
+				l++;
+				solutions[h] = new Solution(minimum, m_circles, circleCenters[h], circleRadius[h]);
+				roots[h++] = minimum;
+			}
+		}
+		
+		return solutions;
+		
+	}
+
+	public static Solution[] initOneSolution(String poly, Integer n, Integer k) { // initializing variables for the main algorithm
 		
 		Complex[] coefficient = new Complex[n+1];
 		String[] co = new String[n+1];
@@ -214,7 +315,26 @@ public class Algorithm {
 		
 		Complex z = new Complex(0.00, 0.00);
 		
-		Complex[] c = findRoot(n, coefficient, b, m, z, k);
+		Solution[] c = findOneRoot(n, coefficient, b, m, z, k);
+		
+		return c;
+		
+	}
+	
+	public static Solution[] init(String poly, Integer n, Integer k) { // initializing variables for the main algorithm
+		
+		Complex[] coefficient = new Complex[n+1];
+		String[] co = new String[n+1];
+		
+		findCoefficients(n, co, coefficient);
+		
+		Double b = findB0(n, coefficient);
+		
+		Double m = findM(b, k);
+		
+		Complex z = new Complex(0.00, 0.00);
+		
+		Solution[] c = findRoot(n, coefficient, b, m, z, k);
 		
 		return c;
 		
